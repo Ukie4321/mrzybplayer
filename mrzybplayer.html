@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MRZYB PLAYER</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #111; color: #fff; margin:0; padding:20px; text-align:center; }
+  .container { max-width: 800px; margin:auto; }
+  input, button { padding:10px; margin:5px; border-radius:5px; border:none; }
+  input { width:70%; }
+  button { background:#0a84ff; color:#fff; cursor:pointer; }
+  button:hover { background:#0066cc; }
+  video { width:100%; max-height:500px; margin-top:20px; border-radius:10px; background:#000; }
+  .video-list { margin-top:20px; display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
+  .video-list button { flex:1 0 45%; max-width:200px; }
+  .output { margin-top:15px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>MRZYB-PLAYER</h2>
+  <p>Masukkan link video MP4 untuk ditambahkan ke daftar:</p>
+  <input type="text" id="videoLink" placeholder="Paste link MP4 di sini">
+  <button onclick="addVideo()">Tambah Video</button>
+
+  <div class="output" id="result"></div>
+  <video id="player" controls></video>
+
+  <div class="video-list" id="videoList"></div>
+</div>
+
+<script>
+const videoList = []; // Array menyimpan semua video
+
+function addVideo(){
+  const link = document.getElementById("videoLink").value.trim();
+  if(!link) return;
+
+  // Encode Base64 untuk share
+  const encoded = btoa(link);
+  const finalUrl = window.location.origin + window.location.pathname + "?video=" + encoded;
+  document.getElementById("result").innerHTML = `
+    <p>Link share (siap copy):</p>
+    <input type="text" value="${finalUrl}" readonly onclick="this.select()">
+  `;
+
+  // Tambahkan ke daftar video
+  videoList.push(link);
+  renderVideoList();
+  playVideo(link);
+
+  // Kosongkan input
+  document.getElementById("videoLink").value = "";
+}
+
+// Render daftar tombol video
+function renderVideoList(){
+  const listDiv = document.getElementById("videoList");
+  listDiv.innerHTML = "";
+  videoList.forEach((link, idx) => {
+    const btn = document.createElement("button");
+    btn.textContent = "Video " + (idx+1);
+    btn.onclick = () => playVideo(link);
+    listDiv.appendChild(btn);
+  });
+}
+
+// Putar video
+function playVideo(link){
+  const player = document.getElementById("player");
+  player.src = link;
+  player.load();
+  player.play();
+}
+
+// Auto-load video dari parameter ?video=
+window.onload = function(){
+  const params = new URLSearchParams(window.location.search);
+  const encoded = params.get("video");
+  if(encoded){
+    try{
+      const url = atob(encoded);
+      videoList.push(url);
+      renderVideoList();
+      playVideo(url);
+    } catch(e){
+      document.getElementById("result").innerHTML = "<p>Link video tidak valid!</p>";
+    }
+  }
+};
+</script>
+</body>
+</html>
